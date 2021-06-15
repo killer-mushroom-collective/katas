@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+// TODO Resolve this https://rapier.rs/docs/user_guides/rust_bevy_plugin/common_mistakes#why-is-everything-moving-in-slow-motion
 fn main() {
     App::build()
         .add_startup_system(setup_camera.system())
