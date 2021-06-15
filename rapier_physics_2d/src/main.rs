@@ -49,6 +49,8 @@ fn setup_physics(mut commands: Commands, materials: Res<Materials>) {
     commands.spawn_bundle(collider).insert_bundle(ground_sprite).insert(Ground);
 
     /* Create the bouncing ball. */
+    // TODO How to round sprite
+    // TODO Sprite lies at rest above ground (mismatched colliding body)
     let ball_sprite = SpriteBundle {
         sprite: Sprite::new(Vec2::new(5.0, 5.0)),
         transform: Transform::from_xyz(0.0, 100.0, 1.0),

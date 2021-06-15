@@ -1,5 +1,5 @@
 [package]
-name = "rapier_physics"
+name = "rapier_physics_2d"
 version = "0.1.0"
 authors = ["Ryan Brink <rbweb@protonmail.com>"]
 edition = "2018"
