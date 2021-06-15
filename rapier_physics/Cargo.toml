@@ -1,0 +1,11 @@
+[package]
+name = "rapier_physics"
+version = "0.1.0"
+authors = ["Ryan Brink <rbweb@protonmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = { version = "0.5.0", features = ["dynamic"] }
+bevy_rapier2d = "0.10.2"
