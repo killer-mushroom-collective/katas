@@ -5,6 +5,7 @@ use bevy_replicon::{prelude::*, renet::{ConnectionConfig, transport::{ClientAuth
 
 use networking::*;
 
+pub struct MySelf(u64);
 
 fn main() {
     App::new()
@@ -16,7 +17,9 @@ fn main() {
         .replicate::<PlayableCharacter>()
         .add_client_event::<MoveEvent>(SendPolicy::Ordered)
         .add_systems(Startup, build_client)
+        .add_systems(Startup, build_world)
         .add_systems(Update, send_move_event)
+        .add_systems(Update, handle_create_event)
         .add_systems(Update, update_pc)
         .run();
 }
@@ -49,17 +52,62 @@ fn build_client(
 }
 
 fn build_world(
-    mut commands: Commands
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let mesh = meshes.add(shape::Plane::from_size(50.0).into());
+    let material = materials.add(Color::SILVER.into());
+
+    commands.spawn(PbrBundle {
+        mesh,
+        material,
+        ..default()
+    });
+
+    commands.spawn(PointLightBundle{
+        point_light: PointLight {
+            intensity: 9000.0,
+            range: 100.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz(8.0, 16.0, 8.0),
+        ..default()
+    });
+
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(0., 6., 12.)
+            .looking_at(Vec3::new(0., 1., 0.), Vec3::Y),
+        ..default()
+    });
+}
+
+fn handle_create_event(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    new_player: Query<(Entity, &PlayableCharacter), Added<PlayableCharacter>>,
+) {
+    for (entity, _) in new_player.iter() {
+        let mesh = meshes.add(shape::Cube::default().into());
+        let material = materials.add(Color::GREEN.into());
+        commands
+            .entity(entity)
+            .insert(PbrBundle {
+                mesh,
+                material,
+                ..default()
+            });
+    }
 }
 
 fn update_pc(
     mut players: Query<(&mut Transform, &mut PlayableCharacter)>,
 ) {
-/*
-    let (mut transform, pc) = players.get_single_mut().unwrap();
-    transform.translation = pc.position.into();
-    */
+    for (mut transform, player) in players.iter_mut() {
+        transform.translation = player.position.into();
+    }
 }
 
 fn send_move_event(
@@ -67,17 +115,24 @@ fn send_move_event(
     keyboard_input: Res<Input<KeyCode>>,
 ) {
     let mut event = MoveEvent::default();
+    let mut send_something = false;
     if keyboard_input.pressed(KeyCode::W) {
         event.forward = 1.;
+        send_something = true;
     }
     if keyboard_input.pressed(KeyCode::S) {
         event.forward = -1.;
+        send_something = true;
     }
     if keyboard_input.pressed(KeyCode::A) {
         event.right = -1.;
+        send_something = true;
     }
     if keyboard_input.pressed(KeyCode::D) {
         event.right = 1.;
+        send_something = true;
     }
-    move_event.send(event);
+    if send_something {
+        move_event.send(event);
+    }
 }

@@ -18,10 +18,10 @@ fn main() {
                 .set(ServerPlugin::new(TickPolicy::MaxTickRate(60))),
         ))
         .replicate::<PlayableCharacter>()
+        .add_client_event::<MoveEvent>(SendPolicy::Ordered)
         .add_systems(Startup, build_server)
         .add_systems(Update, server_event)
         .add_systems(Update, handle_move_events)
-        .add_client_event::<MoveEvent>(SendPolicy::Ordered)
         .run();
 }
 
@@ -40,7 +40,7 @@ fn build_server(
     let public_addr = SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 9090);
     let socket = UdpSocket::bind(public_addr).unwrap();
     let server_config = ServerConfig {
-        max_clients: 1,
+        max_clients: 4,
         protocol_id: 0,
         public_addr,
         authentication: ServerAuthentication::Unsecure,
@@ -60,7 +60,7 @@ fn handle_move_events(
     for FromClient {client_id, event } in move_events.iter() {
         for (player_id, mut transform, mut pc) in players.iter_mut() {
             if player_id.0 == client_id.clone() {
-                transform.translation += 1.8 * Vec3::new(event.forward, 0., event.right) * timer.delta_seconds();
+                transform.translation += 25. * Vec3::new(event.right, 0., event.forward) * timer.delta_seconds();
                 pc.position = transform.translation.into();
             }
         }
@@ -76,11 +76,13 @@ fn server_event(
         match event {
             ServerEvent::ClientConnected { client_id } => {
 				info!("CONNECTED! {:?}", client_id);
+                let pc = PlayableCharacter::default();
                 commands.spawn((
-                    PlayerID(client_id.clone()),
-                    PlayableCharacter::default(),
+					PlayerID(client_id.clone()),
                     GlobalTransform::default(),
                     Transform::default(),
+					pc.clone(),
+					Replication,
                 ));
             },
             ServerEvent::ClientDisconnected { client_id, .. } => {

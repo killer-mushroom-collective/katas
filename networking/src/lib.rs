@@ -2,11 +2,10 @@ use bevy::prelude::*;
 
 use serde::{Serialize, Deserialize};
 
-#[derive(Component, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Default, Serialize, Deserialize)]
 pub struct PlayableCharacter {
     pub position: (f32, f32, f32),
-    pub name: String,
-    pub power_level: u8,
+    pub name: u64,
 }
 
 #[derive(Component)]
